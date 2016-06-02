@@ -2,8 +2,10 @@
 #include <iostream>
 #include <string>
 
-#include "fann.h"
+#include "floatfann.h"
+#include "importer.h"
 
+//#define TEST
 
 void trainNeuralNet(const char* input, const char* output);
 void testNeuralNet(const char* input);
@@ -13,7 +15,7 @@ int main(int argc, char* argv[])
 {
     if(argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <mode>" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " <mode>" << std::endl;
 
         return 1;
     }
@@ -54,6 +56,7 @@ int main(int argc, char* argv[])
 
 void trainNeuralNet(const char* const input, const char* const output)
 {
+#ifdef TEST
     const unsigned int numLayers = 3;
     const unsigned int numInputs = 2;
     const unsigned int numNeuronsHidden = 3;
@@ -68,11 +71,41 @@ void trainNeuralNet(const char* const input, const char* const output)
     fann_train_on_file(ann, input, maxEpochs, epochsBetweenReports, desiredError);
     fann_save(ann, output);
     fann_destroy(ann);
+#else
+	int w = 5;
+	int h = 5;
+	int width;
+	int height;
+	fann_train_data data = Importer::getDataFromBMP(input/*"../data/test_data_3500_1000.bmp"*/, w, h, width, height);
+
+
+	const unsigned int numLayers = 3;
+	const unsigned int numInputs = w * h;
+	const unsigned int numNeuronsHidden = 10;
+	const unsigned int numOutputs = w * h;
+	const float desiredError = 0.0f;
+	const unsigned int maxEpochs = 5000;
+	const unsigned int epochsBetweenReports = 100;
+	
+	fann* ann = fann_create_standard(numLayers, numInputs, numNeuronsHidden, numOutputs);
+	fann_set_activation_function_hidden(ann, FANN_ELLIOT);
+	fann_set_activation_function_output(ann, FANN_ELLIOT);
+	fann_train_on_data(ann, &data, maxEpochs, epochsBetweenReports, desiredError);
+	fann_save(ann, output);
+
+	fann_destroy(ann);
+	for (int i = 0; i < data.num_data; ++i)
+		delete[] data.input[i];
+	delete[] data.input;
+#endif
 }
 
+//train ../data/test_data_3500_1000x2.bmp NN_layer1_0.txt
+//test NN_layer1_0.txt
 
 void testNeuralNet(const char* const input)
 {
+#ifdef TEST
     using InputData = std::array<fann_type, 2u>;
     std::array<InputData, 4u> testData =
     { {
@@ -91,4 +124,30 @@ void testNeuralNet(const char* const input)
     }
 
     fann_destroy(ann);
+#else
+	fann* ann = fann_create_from_file(input);
+	int w = sqrt(ann->num_input);
+	int h = sqrt(ann->num_input); 
+	int width;
+	int height;
+	fann_train_data testdata = Importer::getDataFromBMP("../data/test_data_3500_1000x2.bmp", w, h, width, height);
+
+	fann_type* imageout = new fann_type[testdata.num_data * testdata.num_output];
+	int gw = (width / w);
+	for (int i = 0; i < testdata.num_data; ++i)
+	{
+		fann_type* result = fann_run(ann, testdata.input[i]);
+		int gx = i % gw;
+		int gy = i / gw;
+		for (int y = 0; y < h; ++y)
+		for (int x = 0; x < w; ++x)
+		{
+			imageout[x + gx * w + (y + gy * h) * gw * w] = result[x + y * w];
+		}
+	}
+
+	Importer::testWriteData("test.txt", gw * w, (height / h) * h, imageout);
+
+	delete[] imageout;
+#endif
 }
