@@ -9,6 +9,7 @@
 
 using namespace std;
 
+#include "data_container.h"
 #include "floatfann.h"
 
 
@@ -45,7 +46,7 @@ class Importer
 private: 
 	static fann_type getPixel(int x, int y, char* buffer, int width, int offset);
 public:
-	static fann_train_data getDataFromBMP(const char* file, int w, int h, int& width, int& height);
+	static DataContainer getDataFromBMP(const char* file, int& width, int& height);
 	static void testWriteData(const char* file, int w, int h, fann_type* data);
 };
 

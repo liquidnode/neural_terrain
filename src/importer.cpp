@@ -3,12 +3,11 @@
 fann_type Importer::getPixel(int x, int y, char* buffer, int width, int offset)
 {
 	int stride = ((24 * width + 31) / 32) * 4;
-	return (float)*reinterpret_cast<unsigned char*>(&buffer[x * 3 + y * stride + offset]) / 255.0f;
+	return ((float)*reinterpret_cast<unsigned char*>(&buffer[x * 3 + y * stride + offset]) / 255.0f) * 2.0f - 1.0f;
 }
 
-fann_train_data Importer::getDataFromBMP(const char* file_, int w, int h, int& width, int& height)
+DataContainer Importer::getDataFromBMP(const char* file_, int& width, int& height)
 {
-	fann_train_data ret;
 	char* buffer;
 	PBITMAPFILEHEADER file_header;
 	PBITMAPINFOHEADER info_header;
@@ -40,7 +39,7 @@ fann_train_data Importer::getDataFromBMP(const char* file_, int w, int h, int& w
 		width = info_header->biWidth;
 		height = info_header->biHeight;
 
-		ret.num_data = (width / w) * (height / h);
+		/*ret.num_data = (width / w) * (height / h);
 		ret.num_input = w * h;
 		ret.num_output = ret.num_input;
 	
@@ -61,14 +60,19 @@ fann_train_data Importer::getDataFromBMP(const char* file_, int w, int h, int& w
 			}
 
 			ret.output[i] = ret.input[i]; //reproduce output
-		}
+		}*/
+		fann_type* ret = new fann_type[width * height];
+		for (int y = 0; y < height; ++y)
+		for (int x = 0; x < width; ++x)
+			ret[x + y * width] = Importer::getPixel(x, y, buffer, width, file_header->bfOffBits);
+		return DataContainer(ret, width, height);
 	}
 	else
 	{
 		std::cerr << "File not found" << std::endl;
 		exit(0);
+		return DataContainer();
 	}
-	return ret;
 }
 
 void Importer::testWriteData(const char* file, int w, int h, fann_type* data)

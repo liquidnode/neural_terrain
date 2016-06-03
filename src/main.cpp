@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
         }
 
         trainNeuralNet(argv[2], argv[3]);
+		testNeuralNet(argv[3]);
     }
     else if(mode == "test")
     {
@@ -76,20 +77,22 @@ void trainNeuralNet(const char* const input, const char* const output)
 	int h = 5;
 	int width;
 	int height;
-	fann_train_data data = Importer::getDataFromBMP(input/*"../data/test_data_3500_1000.bmp"*/, w, h, width, height);
+	DataContainer container = Importer::getDataFromBMP(input/*"../data/test_data_3500_1000.bmp"*/, width, height);
+	fann_train_data data = container.getTrainingsData(w, h);
 
-
-	const unsigned int numLayers = 3;
+	const unsigned int numLayers = 4;
 	const unsigned int numInputs = w * h;
-	const unsigned int numNeuronsHidden = 10;
+	const unsigned int numNeuronsHidden1 = 15;
+	const unsigned int numNeuronsHidden2 = 10;
 	const unsigned int numOutputs = w * h;
 	const float desiredError = 0.0f;
-	const unsigned int maxEpochs = 5000;
+	const unsigned int maxEpochs = 10000;
 	const unsigned int epochsBetweenReports = 100;
 	
-	fann* ann = fann_create_standard(numLayers, numInputs, numNeuronsHidden, numOutputs);
-	fann_set_activation_function_hidden(ann, FANN_ELLIOT);
-	fann_set_activation_function_output(ann, FANN_ELLIOT);
+	fann* ann = fann_create_standard//(numLayers, numInputs, numNeuronsHidden1, numNeuronsHidden2, numNeuronsHidden1, numOutputs);
+		(numLayers, numInputs, numNeuronsHidden1, numNeuronsHidden2, numOutputs);
+	fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC);
+	fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC);
 	fann_train_on_data(ann, &data, maxEpochs, epochsBetweenReports, desiredError);
 	fann_save(ann, output);
 
@@ -130,7 +133,8 @@ void testNeuralNet(const char* const input)
 	int h = sqrt(ann->num_input); 
 	int width;
 	int height;
-	fann_train_data testdata = Importer::getDataFromBMP("../data/test_data_3500_1000x2.bmp", w, h, width, height);
+	DataContainer container = Importer::getDataFromBMP("../data/test_data_3500_1000x2.bmp", width, height);
+	fann_train_data testdata = container.getTrainingsData(w, h);
 
 	fann_type* imageout = new fann_type[testdata.num_data * testdata.num_output];
 	int gw = (width / w);
@@ -146,7 +150,7 @@ void testNeuralNet(const char* const input)
 		}
 	}
 
-	Importer::testWriteData("test.txt", gw * w, (height / h) * h, imageout);
+	Importer::testWriteData("test2.txt", gw * w, (height / h) * h, imageout);
 
 	delete[] imageout;
 #endif
