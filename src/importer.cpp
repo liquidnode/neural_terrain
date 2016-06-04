@@ -39,32 +39,11 @@ DataContainer Importer::getDataFromBMP(const char* file_, int& width, int& heigh
 		width = info_header->biWidth;
 		height = info_header->biHeight;
 
-		/*ret.num_data = (width / w) * (height / h);
-		ret.num_input = w * h;
-		ret.num_output = ret.num_input;
-	
-		ret.input = new fann_type*[ret.num_data];
-		ret.output = new fann_type*[ret.num_data];
-
-		for (int gy = 0; gy < (height / h); ++gy)
-		for (int gx = 0; gx < (width / w); ++gx)
-		{
-			int i = gx + gy * (width / w);
-			ret.input[i] = new fann_type[ret.num_input];
-
-			for (int y = 0; y < h; ++y)
-			for (int x = 0; x < w; ++x)
-			{
-				int g = x + gx * w + (y + gy * h) * (width / w) * w;
-				ret.input[i][x + y * w] = Importer::getPixel(x + gx * w, y + gy * h, buffer, width, file_header->bfOffBits);
-			}
-
-			ret.output[i] = ret.input[i]; //reproduce output
-		}*/
 		fann_type* ret = new fann_type[width * height];
 		for (int y = 0; y < height; ++y)
 		for (int x = 0; x < width; ++x)
 			ret[x + y * width] = Importer::getPixel(x, y, buffer, width, file_header->bfOffBits);
+
 		return DataContainer(ret, width, height);
 	}
 	else

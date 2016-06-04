@@ -32,14 +32,7 @@ fann_train_data DataContainer::getTrainingsData(int w, int h)
 	for (int gx = 0; gx < (sizex / w); ++gx)
 	{
 		int i = gx + gy * (sizex / w);
-		/*ret.input[i] = new fann_type[ret.num_input];
 
-		for (int y = 0; y < h; ++y)
-		for (int x = 0; x < w; ++x)
-		{
-			int g = x + gx * w + (y + gy * h) * (sizex / w) * w;
-			ret.input[i][x + y * w] = data[x + gx * w + (y + gy * h) * sizex];
-		}*/
 		ret.input[i] = getRectangle(gx * w, gy * h, w, h);
 
 		ret.output[i] = ret.input[i]; //reproduce output
